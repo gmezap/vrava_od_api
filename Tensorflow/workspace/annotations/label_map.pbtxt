@@ -1,0 +1,12 @@
+item { 
+	name:'dent'
+	id:1
+}
+item { 
+	name:'scratch'
+	id:2
+}
+item { 
+	name:'broken'
+	id:3
+}
