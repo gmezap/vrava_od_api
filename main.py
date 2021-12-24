@@ -3,6 +3,7 @@ import tensorflow as tf
 import getpass
 import cv2 
 import numpy as np
+import matplotlib.pyplot as plt
 # os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 
 
@@ -84,12 +85,10 @@ def json_danios(image):
     # detection_classes should be ints.
     detections['detection_classes'] = detections['detection_classes'].astype(np.int64)
     image_with_detections = boxes(image, detections)
-    danos = dict()
+    danos = list()
     for i,score in enumerate(detections['detection_scores']):
         if score > 0.5:
-            danos[i]={'tipo':labels[int(detections['detection_classes'][i])]['name'],'certeza':str(round(score,3))}
-            # if json!='': json+=', '
-            # json+= '{tipo:'+labels[int(detections['detection_classes'][i])]['name']+', certeza:'+ str(score) +'}'
+            danos.append({'tipo':int(detections['detection_classes'][i]),'certeza':str(round(score,3))})
     return danos, image_with_detections
 
 def boxes(image, detections):
@@ -107,7 +106,7 @@ def boxes(image, detections):
             agnostic_mode=False)
     return cv2.cvtColor(image_np_with_detections, cv2.COLOR_BGR2RGB).reshape(image.shape)
 
-from fastapi import FastAPI, File, UploadFile
+from fastapi import FastAPI, File, UploadFile, Response
 from io import BytesIO
 from PIL import Image
 import json
@@ -122,17 +121,32 @@ async def predi( file: UploadFile = File(...) ):
     image = np.array(Image.open(BytesIO(await file.read())))
     danos, imagen = json_danios(image)
     res, im_png = cv2.imencode(".png", imagen)
-    return StreamingResponse(BytesIO(im_png.tobytes()), media_type="image/png", headers={'danos':json.dumps(danos)})
+    return StreamingResponse(BytesIO(im_png.tobytes()), media_type="image/png", headers={'danos':danos})
 
 @app.get('/predict/{id}')
-async def predict(id):
+async def predict(id, response: Response):
     url = "https://strapi-malayapps.s3.amazonaws.com/"+str(id)
     res = requests.get(url)
     image = np.array(Image.open(BytesIO(res.content)))
     danos, imagen = json_danios(image)
     res, im_png = cv2.imencode(".png", imagen)
-    return StreamingResponse(BytesIO(im_png.tobytes()), media_type="image/png", headers={'danos':json.dumps(danos)})
+    filename = (id)
+    url = await upload(filename,BytesIO(im_png.tobytes()))
+    # return StreamingResponse(BytesIO(im_png.tobytes()), media_type="image/jpg", headers={'danos':json.dumps(danos), 'url': url})
+    # prediccion = {'predict': {'danos':json.dumps(danos), 'url': url}}
+    response.headers['danos'] = json.dumps(danos)
+    response.headers['url'] = url
+    return 'holi'
 
 @app.get('/')
 def home():
     return {'message': 'wena compare'} 
+
+import requests
+
+async def upload(filename, files):
+    upload = 'https://vravabackahorasi-production.up.railway.app/upload'
+    files={'files' : (filename, files, 'image/jpg')}
+    r = requests.post(upload, files=files)
+    print(r.content)
+    return r.json()[0]['url']
