@@ -1,5 +1,5 @@
 pip-upgrader
-tensorflow-cpu
+tensorflow --upgrade
 fastapi
 uvicorn
 gunicorn
