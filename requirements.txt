@@ -1,3 +1,4 @@
+pip-upgrader
 tensorflow-cpu
 fastapi
 uvicorn
