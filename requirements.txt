@@ -3,9 +3,8 @@ uvicorn
 gunicorn
 python-multipart
 pillow
-tensorflow-serving-api
 matplotlib
 numpy
-pyparsing
+pyparsing==2.4.7
 opencv-python
 ./Tensorflow/models/research/
