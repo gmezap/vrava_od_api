@@ -1,5 +1,4 @@
-pip-upgrader
-tensorflow==2.5.0
+tensorflow-cpu
 fastapi
 uvicorn
 gunicorn
