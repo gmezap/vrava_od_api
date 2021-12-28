@@ -1,3 +1,2 @@
-process: apt-get update
-process: apt-get install ffmpeg libsm6 libxext6  -y
+process: sudo apt-get install python3-opencv
 web: uvicorn main:app
